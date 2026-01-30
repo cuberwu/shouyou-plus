@@ -291,13 +291,16 @@ class PracticeApp {
         // 重置答案显示状态
         this.answerRevealed = false;
         
+        // 清除之前的反馈状态
+        this.clearFeedback();
+        
         if (this.currentRadical) {
+            // 先隐藏按键提示（立即隐藏，避免显示旧内容）
+            this.hideKeyHint(true);
+            
             // 更新显示
             this.elements.radicalChar.textContent = this.currentRadical.char;
             this.elements.keyHint.textContent = this.currentRadical.key;
-            
-            // 隐藏按键提示
-            this.hideKeyHint();
             
             // 添加进入动画
             this.elements.radicalChar.classList.remove('radical-enter');
@@ -321,11 +324,22 @@ class PracticeApp {
     
     /**
      * 隐藏按键提示
+     * @param {boolean} immediate - 是否立即隐藏（不使用过渡动画）
      */
-    hideKeyHint() {
+    hideKeyHint(immediate = false) {
         if (this.elements.keyHintContainer) {
-            this.elements.keyHintContainer.classList.remove('opacity-100');
-            this.elements.keyHintContainer.classList.add('opacity-0');
+            if (immediate) {
+                // 立即隐藏：先禁用过渡，设置透明度，再恢复过渡
+                this.elements.keyHintContainer.style.transition = 'none';
+                this.elements.keyHintContainer.classList.remove('opacity-100');
+                this.elements.keyHintContainer.classList.add('opacity-0');
+                // 强制重排后恢复过渡
+                void this.elements.keyHintContainer.offsetWidth;
+                this.elements.keyHintContainer.style.transition = '';
+            } else {
+                this.elements.keyHintContainer.classList.remove('opacity-100');
+                this.elements.keyHintContainer.classList.add('opacity-0');
+            }
         }
     }
     
@@ -349,21 +363,21 @@ class PracticeApp {
                 radicalChar.classList.add('feedback-correct');
                 inputField.classList.add('input-correct');
                 this.showMessage('正确！', 'correct');
+                // 正确时设置定时器，200ms 后清除反馈
+                this.feedbackTimer = setTimeout(() => {
+                    this.clearFeedback();
+                }, 200);
                 break;
                 
             case 'wrong':
-                // 错误反馈
+                // 错误反馈 - 不设置定时器，保持错误状态直到用户输入正确答案
                 iconWrong.classList.remove('hidden');
                 radicalChar.classList.add('feedback-wrong');
                 inputField.classList.add('input-wrong');
                 this.showMessage(`错误！正确答案是 ${this.currentRadical.key}`, 'wrong');
+                // 错误时不自动清除，等待用户输入正确答案后由 showNextRadical 清除
                 break;
         }
-        
-        // 定时清除反馈
-        this.feedbackTimer = setTimeout(() => {
-            this.clearFeedback();
-        }, type === 'correct' ? 200 : 800);
     }
     
     /**
