@@ -404,9 +404,9 @@ class PracticeApp {
      * 显示练习完成庆祝提示
      */
     showCompletionCelebration() {
-        const stats = this.radicalManager.getLearningStats();
-        const accuracy = this.stats.totalAttempts > 0 
-            ? Math.round((this.stats.correctCount / this.stats.totalAttempts) * 100) 
+        const totalCount = this.radicalManager.getTotalCount();
+        const accuracy = this.stats.totalAttempts > 0
+            ? Math.round((this.stats.correctCount / this.stats.totalAttempts) * 100)
             : 0;
         
         // 创建庆祝弹窗
@@ -416,7 +416,7 @@ class PracticeApp {
             <div class="completion-content">
                 <div class="completion-icon">🎉</div>
                 <h2 class="completion-title">恭喜完成！</h2>
-                <p class="completion-subtitle">你已经练习过所有 ${stats.totalCount} 个字根！</p>
+                <p class="completion-subtitle">你已经练习过所有 ${totalCount} 个字根！</p>
                 <div class="completion-stats">
                     <div class="stat-item">
                         <span class="stat-value">${accuracy}%</span>
@@ -427,8 +427,8 @@ class PracticeApp {
                         <span class="stat-label">最高连击</span>
                     </div>
                     <div class="stat-item">
-                        <span class="stat-value">${stats.masteredCount}</span>
-                        <span class="stat-label">已掌握</span>
+                        <span class="stat-value">${totalCount}</span>
+                        <span class="stat-label">已学习</span>
                     </div>
                 </div>
                 <p class="completion-tip">继续练习可以巩固记忆，系统会智能安排复习！</p>
