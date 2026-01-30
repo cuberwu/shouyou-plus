@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="zh-CN" class="fonts-loading">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>首右plus - 字根练习</title>
+    
+    <!-- Google Fonts - 使用 display=block 避免 FOUT，配合 JS 检测实现平滑过渡 -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <!-- 预加载关键字体 -->
+    <link rel="preload" href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@600;700&display=block" as="style">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;500;600;700&family=Noto+Sans+SC:wght@300;400;500;700&family=JetBrains+Mono:wght@400;500&display=block" rel="stylesheet">
+    
+    <!-- 字体加载检测脚本 - 放在 head 中尽早执行 -->
+    <script>
+        // 使用 Font Loading API 检测字体加载状态
+        (function() {
+            // 设置超时时间（毫秒）
+            var FONT_TIMEOUT = 3000;
+            var html = document.documentElement;
+            
+            // 检测关键字体是否加载完成
+            if ('fonts' in document) {
+                // 使用 Promise.race 实现超时机制
+                var fontPromise = document.fonts.load('600 1em "Noto Serif SC"');
+                var timeoutPromise = new Promise(function(resolve) {
+                    setTimeout(function() {
+                        resolve('timeout');
+                    }, FONT_TIMEOUT);
+                });
+                
+                Promise.race([fontPromise, timeoutPromise]).then(function(result) {
+                    html.classList.remove('fonts-loading');
+                    if (result === 'timeout') {
+                        html.classList.add('fonts-timeout');
+                        console.log('字体加载超时，使用回退字体');
+                    } else {
+                        html.classList.add('fonts-loaded');
+                        console.log('字体加载完成');
+                    }
+                }).catch(function() {
+                    html.classList.remove('fonts-loading');
+                    html.classList.add('fonts-timeout');
+                });
+            } else {
+                // 不支持 Font Loading API 的浏览器，直接显示
+                html.classList.remove('fonts-loading');
+                html.classList.add('fonts-loaded');
+            }
+        })();
+    </script>
+    
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        ink: {
+                            black: '#1A1A1A',
+                            dark: '#333333',
+                            light: '#666666',
+                            faint: '#999999',
+                        },
+                        paper: {
+                            rice: '#F5F1E8',
+                            plain: '#FAF8F3',
+                            warm: '#FFFEF9',
+                        },
+                        accent: {
+                            cinnabar: '#C53D43',
+                            turquoise: '#1A9988',
+                            gamboge: '#D4A84B',
+                        }
+                    },
+                    fontFamily: {
+                        'serif-sc': ['"Noto Serif SC"', 'serif'],
+                        'sans-sc': ['"Noto Sans SC"', 'sans-serif'],
+                        'mono': ['"JetBrains Mono"', 'monospace'],
+                    },
+                    animation: {
+                        'ink-spread': 'inkSpread 0.3s ease-out forwards',
+                        'shake': 'shake 0.2s ease-in-out',
+                        'pulse-gold': 'pulseGold 0.4s ease-out',
+                        'fade-in': 'fadeIn 0.25s ease-out',
+                    },
+                    keyframes: {
+                        inkSpread: {
+                            '0%': { transform: 'scale(0.8)', opacity: '0' },
+                            '100%': { transform: 'scale(1)', opacity: '1' },
+                        },
+                        shake: {
+                            '0%, 100%': { transform: 'translateX(0)' },
+                            '25%': { transform: 'translateX(-4px)' },
+                            '75%': { transform: 'translateX(4px)' },
+                        },
+                        pulseGold: {
+                            '0%': { boxShadow: '0 0 0 0 rgba(212, 168, 75, 0.7)' },
+                            '100%': { boxShadow: '0 0 0 20px rgba(212, 168, 75, 0)' },
+                        },
+                        fadeIn: {
+                            '0%': { opacity: '0', transform: 'translateY(10px)' },
+                            '100%': { opacity: '1', transform: 'translateY(0)' },
+                        },
+                    },
+                }
+            }
+        }
+    </script>
+    
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="css/custom.css">
+</head>
+<body class="min-h-screen bg-paper-rice font-sans-sc text-ink-black">
+    <!-- 水墨背景装饰 -->
+    <div class="fixed inset-0 pointer-events-none overflow-hidden z-0">
+        <div class="ink-wash-bg"></div>
+    </div>
+    
+    <!-- 主容器 -->
+    <div class="relative z-10 min-h-screen flex flex-col">
+        <!-- 头部 -->
+        <header class="py-6 text-center">
+            <h1 class="font-serif-sc text-3xl md:text-4xl font-semibold text-ink-black tracking-wider">
+                首右<span class="text-accent-cinnabar">plus</span>
+            </h1>
+            <p class="mt-2 text-ink-light text-sm md:text-base">字根练习</p>
+        </header>
+        
+        <!-- 主内容区 -->
+        <main class="flex-1 flex flex-col lg:flex-row items-start justify-center gap-6 px-4 pb-8 max-w-6xl mx-auto w-full">
+            
+            <!-- 左侧：统计信息面板 -->
+            <aside class="w-full lg:w-64 shrink-0">
+                <div class="ink-card p-6 space-y-6">
+                    <!-- 进度 -->
+                    <div class="space-y-2">
+                        <h3 class="text-ink-light text-sm font-medium flex items-center gap-2">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                            </svg>
+                            练习进度
+                        </h3>
+                        <div class="flex items-baseline gap-1">
+                            <span id="current-count" class="text-3xl font-serif-sc font-bold text-ink-black">0</span>
+                            <span class="text-ink-faint">/</span>
+                            <span id="total-count" class="text-xl text-ink-light">0</span>
+                        </div>
+                        <!-- 进度条 -->
+                        <div class="h-2 bg-paper-rice rounded-full overflow-hidden border border-ink-faint/20">
+                            <div id="progress-bar" class="h-full bg-gradient-to-r from-ink-light to-ink-black transition-all duration-300 rounded-full" style="width: 0%"></div>
+                        </div>
+                    </div>
+                    
+                    <!-- 分隔线 -->
+                    <div class="brush-stroke-divider"></div>
+                    
+                    <!-- 正确率 -->
+                    <div class="space-y-2">
+                        <h3 class="text-ink-light text-sm font-medium flex items-center gap-2">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                            正确率
+                        </h3>
+                        <div class="flex items-baseline gap-1">
+                            <span id="accuracy" class="text-3xl font-serif-sc font-bold text-accent-turquoise">0</span>
+                            <span class="text-xl text-ink-light">%</span>
+                        </div>
+                    </div>
+                    
+                    <!-- 分隔线 -->
+                    <div class="brush-stroke-divider"></div>
+                    
+                    <!-- 连击 -->
+                    <div class="space-y-2">
+                        <h3 class="text-ink-light text-sm font-medium flex items-center gap-2">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                            </svg>
+                            连击
+                        </h3>
+                        <div class="flex items-baseline gap-2">
+                            <span id="combo" class="text-3xl font-serif-sc font-bold text-accent-gamboge">0</span>
+                            <span id="combo-multiplier" class="text-sm text-ink-faint hidden">
+                                ×<span id="multiplier-value">1</span>
+                            </span>
+                        </div>
+                        <p class="text-xs text-ink-faint">
+                            最高连击: <span id="max-combo" class="font-medium">0</span>
+                        </p>
+                    </div>
+                    
+                    <!-- 分隔线 -->
+                    <div class="brush-stroke-divider"></div>
+                    
+                    <!-- 重置按钮 -->
+                    <button id="reset-btn" class="w-full py-2 px-4 text-sm text-ink-light hover:text-ink-black border border-ink-faint/30 rounded-lg hover:border-ink-light transition-all duration-200 cursor-pointer">
+                        重新开始
+                    </button>
+                </div>
+            </aside>
+            
+            <!-- 右侧：练习区域 -->
+            <section class="flex-1 w-full max-w-2xl">
+                <div class="ink-card p-8 md:p-12">
+                    <!-- 字根显示区 -->
+                    <div id="radical-display" class="text-center mb-8">
+                        <!-- 字根大字 -->
+                        <div id="radical-char" class="font-serif-sc text-8xl md:text-9xl font-bold text-ink-black mb-4 transition-all duration-200 select-none">
+                            火
+                        </div>
+                        
+                        <!-- 对应按键提示（默认隐藏） -->
+                        <div id="key-hint-container" class="flex items-center justify-center gap-2 opacity-0 transition-opacity duration-200">
+                            <span class="text-ink-faint text-sm">按键</span>
+                            <kbd id="key-hint" class="font-mono text-2xl md:text-3xl px-4 py-2 bg-paper-rice border-2 border-ink-faint/30 rounded-lg text-ink-dark shadow-sm">
+                                ?
+                            </kbd>
+                        </div>
+                    </div>
+                    
+                    <!-- 输入区域 -->
+                    <div class="relative max-w-xs mx-auto">
+                        <input 
+                            type="text" 
+                            id="input-field"
+                            class="w-full text-center text-2xl font-mono py-3 px-4 bg-paper-warm border-2 border-ink-faint/30 rounded-xl focus:border-ink-light focus:outline-none transition-all duration-200 placeholder:text-ink-faint/50"
+                            placeholder="输入按键..."
+                            autocomplete="off"
+                            autocapitalize="off"
+                            spellcheck="false"
+                        >
+                        <!-- 反馈图标 -->
+                        <div id="feedback-icon" class="absolute right-3 top-1/2 -translate-y-1/2 opacity-0 transition-opacity duration-200">
+                            <!-- 正确图标 -->
+                            <svg id="icon-correct" class="w-6 h-6 text-accent-turquoise hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/>
+                            </svg>
+                            <!-- 错误图标 -->
+                            <svg id="icon-wrong" class="w-6 h-6 text-accent-cinnabar hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M6 18L18 6M6 6l12 12"/>
+                            </svg>
+                        </div>
+                    </div>
+                    
+                    <!-- 提示信息 -->
+                    <div id="hint-area" class="mt-6 text-center">
+                        <p class="text-ink-faint text-sm">
+                            <span class="hidden md:inline">直接按键盘输入 · </span>
+                            按 <kbd class="px-1.5 py-0.5 bg-paper-rice border border-ink-faint/30 rounded text-xs">空格</kbd> 显示答案
+                        </p>
+                    </div>
+                    
+                    <!-- 反馈消息 -->
+                    <div id="feedback-message" class="mt-4 text-center h-8">
+                        <!-- 动态显示反馈消息 -->
+                    </div>
+                </div>
+                
+                <!-- 快捷提示 -->
+                <div class="mt-4 text-center text-ink-faint text-xs space-x-4">
+                    <span>按对自动跳下一个</span>
+                    <span>·</span>
+                    <span>按错会更频繁出现</span>
+                </div>
+            </section>
+        </main>
+        
+        <!-- 页脚 -->
+        <footer class="py-4 text-center text-ink-faint text-xs">
+            <p>首右plus 字根练习 · 水墨风格</p>
+        </footer>
+    </div>
+    
+    <!-- JavaScript 模块 -->
+    <script src="js/radicals.js"></script>
+    <script src="js/storage.js"></script>
+    <script src="js/practice.js"></script>
+</body>
+</html>

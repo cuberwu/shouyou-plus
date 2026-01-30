@@ -1,0 +1,508 @@
+/**
+ * 首右plus 练习逻辑模块
+ * 处理用户交互、反馈显示和状态管理
+ */
+
+class PracticeApp {
+    constructor() {
+        // 管理器实例
+        this.radicalManager = new RadicalManager();
+        this.storageManager = new StorageManager();
+        
+        // 当前字根
+        this.currentRadical = null;
+        
+        // 答案是否已显示
+        this.answerRevealed = false;
+        
+        // 统计数据
+        this.stats = {
+            totalAttempts: 0,
+            correctCount: 0,
+            wrongCount: 0,
+            currentCombo: 0,
+            maxCombo: 0,
+            practicedCount: 0
+        };
+        
+        // DOM 元素引用
+        this.elements = {};
+        
+        // 反馈消息定时器
+        this.feedbackTimer = null;
+        
+        // 初始化
+        this.init();
+    }
+    
+    /**
+     * 初始化应用
+     */
+    init() {
+        // 缓存 DOM 元素
+        this.cacheElements();
+        
+        // 恢复存储的数据
+        this.restoreFromStorage();
+        
+        // 绑定事件
+        this.bindEvents();
+        
+        // 显示第一个字根
+        this.showNextRadical();
+        
+        // 更新 UI
+        this.updateUI();
+        
+        // 聚焦输入框
+        this.focusInput();
+    }
+    
+    /**
+     * 缓存 DOM 元素引用
+     */
+    cacheElements() {
+        this.elements = {
+            radicalChar: document.getElementById('radical-char'),
+            keyHint: document.getElementById('key-hint'),
+            keyHintContainer: document.getElementById('key-hint-container'),
+            inputField: document.getElementById('input-field'),
+            feedbackIcon: document.getElementById('feedback-icon'),
+            iconCorrect: document.getElementById('icon-correct'),
+            iconWrong: document.getElementById('icon-wrong'),
+            feedbackMessage: document.getElementById('feedback-message'),
+            currentCount: document.getElementById('current-count'),
+            totalCount: document.getElementById('total-count'),
+            progressBar: document.getElementById('progress-bar'),
+            accuracy: document.getElementById('accuracy'),
+            combo: document.getElementById('combo'),
+            comboMultiplier: document.getElementById('combo-multiplier'),
+            multiplierValue: document.getElementById('multiplier-value'),
+            maxCombo: document.getElementById('max-combo'),
+            resetBtn: document.getElementById('reset-btn')
+        };
+    }
+    
+    /**
+     * 从存储恢复数据
+     */
+    restoreFromStorage() {
+        const savedData = this.storageManager.load();
+        
+        // 恢复统计数据
+        if (savedData.stats) {
+            this.stats = { ...this.stats, ...savedData.stats };
+        }
+        
+        // 恢复字根权重
+        if (savedData.weights) {
+            this.radicalManager.restoreWeights(savedData.weights);
+        }
+        
+        // 恢复已练习字根
+        if (savedData.practicedRadicals) {
+            this.radicalManager.restorePracticed(savedData.practicedRadicals);
+        }
+    }
+    
+    /**
+     * 保存数据到存储
+     */
+    saveToStorage() {
+        this.storageManager.saveState({
+            stats: this.stats,
+            weights: this.radicalManager.getWeightsData(),
+            practicedRadicals: this.radicalManager.getPracticedData()
+        });
+    }
+    
+    /**
+     * 绑定事件监听器
+     */
+    bindEvents() {
+        // 输入框事件
+        this.elements.inputField.addEventListener('input', (e) => this.handleInput(e));
+        this.elements.inputField.addEventListener('keydown', (e) => this.handleKeyDown(e));
+        
+        // 全局键盘事件（允许不聚焦输入框也能输入）
+        document.addEventListener('keydown', (e) => this.handleGlobalKeyDown(e));
+        
+        // 重置按钮
+        this.elements.resetBtn.addEventListener('click', () => this.handleReset());
+        
+        // 页面可见性变化时保存数据
+        document.addEventListener('visibilitychange', () => {
+            if (document.hidden) {
+                this.saveToStorage();
+            }
+        });
+        
+        // 页面卸载前保存数据
+        window.addEventListener('beforeunload', () => {
+            this.saveToStorage();
+        });
+    }
+    
+    /**
+     * 处理输入事件
+     */
+    handleInput(e) {
+        const input = e.target.value.trim().toUpperCase();
+        
+        if (input.length === 0) return;
+        
+        // 检查答案
+        this.checkAnswer(input);
+        
+        // 清空输入框
+        this.elements.inputField.value = '';
+    }
+    
+    /**
+     * 处理键盘按下事件
+     */
+    handleKeyDown(e) {
+        // 空格键显示答案
+        if (e.key === ' ' || e.code === 'Space') {
+            e.preventDefault();
+            this.revealAnswer();
+        }
+    }
+    
+    /**
+     * 处理全局键盘事件
+     */
+    handleGlobalKeyDown(e) {
+        // 如果焦点在输入框，不处理
+        if (document.activeElement === this.elements.inputField) return;
+        
+        // 忽略功能键
+        if (e.ctrlKey || e.altKey || e.metaKey) return;
+        
+        // 空格键显示答案
+        if (e.key === ' ' || e.code === 'Space') {
+            e.preventDefault();
+            this.revealAnswer();
+            return;
+        }
+        
+        // 字母键
+        if (/^[a-zA-Z]$/.test(e.key)) {
+            e.preventDefault();
+            this.checkAnswer(e.key.toUpperCase());
+        }
+    }
+    
+    /**
+     * 检查答案
+     */
+    checkAnswer(input) {
+        if (!this.currentRadical) return;
+        
+        const isCorrect = this.radicalManager.checkAnswer(input, this.currentRadical);
+        
+        this.stats.totalAttempts++;
+        
+        if (isCorrect) {
+            this.handleCorrect();
+        } else {
+            this.handleWrong(input);
+        }
+        
+        // 更新 UI 和保存
+        this.updateUI();
+        this.saveToStorage();
+    }
+    
+    /**
+     * 处理正确答案
+     */
+    handleCorrect() {
+        this.stats.correctCount++;
+        this.stats.currentCombo++;
+        
+        // 更新最高连击
+        if (this.stats.currentCombo > this.stats.maxCombo) {
+            this.stats.maxCombo = this.stats.currentCombo;
+        }
+        
+        // 标记为已练习
+        this.radicalManager.markPracticed(this.currentRadical.id);
+        this.stats.practicedCount = this.radicalManager.getPracticedCount();
+        
+        // 降低权重（答对的字根出现频率降低）
+        this.radicalManager.decreaseWeight(this.currentRadical.id);
+        
+        // 显示反馈
+        this.showFeedback('correct');
+        
+        // 连击提示
+        if (this.stats.currentCombo > 0 && this.stats.currentCombo % 5 === 0) {
+            this.showComboMessage(this.stats.currentCombo);
+        }
+        
+        // 延迟显示下一个字根
+        setTimeout(() => {
+            this.showNextRadical();
+        }, 200);
+    }
+    
+    /**
+     * 处理错误答案
+     */
+    handleWrong(input) {
+        this.stats.wrongCount++;
+        this.stats.currentCombo = 0;
+        
+        // 增加权重（答错的字根出现频率增加）
+        this.radicalManager.increaseWeight(this.currentRadical.id);
+        
+        // 标记答案已显示
+        this.answerRevealed = true;
+        
+        // 显示按键提示
+        this.showKeyHint();
+        
+        // 显示反馈
+        this.showFeedback('wrong', input);
+    }
+    
+    /**
+     * 显示答案（按空格触发）
+     */
+    revealAnswer() {
+        if (!this.currentRadical || this.answerRevealed) return;
+        
+        this.answerRevealed = true;
+        
+        // 显示按键提示
+        this.showKeyHint();
+        
+        // 显示提示消息
+        this.showMessage(`答案是 ${this.currentRadical.key}`, 'skip');
+    }
+    
+    /**
+     * 显示下一个字根
+     */
+    showNextRadical() {
+        this.currentRadical = this.radicalManager.getNextRadical();
+        
+        // 重置答案显示状态
+        this.answerRevealed = false;
+        
+        if (this.currentRadical) {
+            // 更新显示
+            this.elements.radicalChar.textContent = this.currentRadical.char;
+            this.elements.keyHint.textContent = this.currentRadical.key;
+            
+            // 隐藏按键提示
+            this.hideKeyHint();
+            
+            // 添加进入动画
+            this.elements.radicalChar.classList.remove('radical-enter');
+            void this.elements.radicalChar.offsetWidth; // 触发重排
+            this.elements.radicalChar.classList.add('radical-enter');
+        }
+        
+        // 聚焦输入框
+        this.focusInput();
+    }
+    
+    /**
+     * 显示按键提示
+     */
+    showKeyHint() {
+        if (this.elements.keyHintContainer) {
+            this.elements.keyHintContainer.classList.remove('opacity-0');
+            this.elements.keyHintContainer.classList.add('opacity-100');
+        }
+    }
+    
+    /**
+     * 隐藏按键提示
+     */
+    hideKeyHint() {
+        if (this.elements.keyHintContainer) {
+            this.elements.keyHintContainer.classList.remove('opacity-100');
+            this.elements.keyHintContainer.classList.add('opacity-0');
+        }
+    }
+    
+    /**
+     * 显示反馈
+     */
+    showFeedback(type, wrongInput = '') {
+        const { radicalChar, inputField, feedbackIcon, iconCorrect, iconWrong, feedbackMessage } = this.elements;
+        
+        // 清除之前的反馈
+        this.clearFeedback();
+        
+        // 显示反馈图标
+        feedbackIcon.classList.remove('opacity-0');
+        feedbackIcon.classList.add('opacity-100');
+        
+        switch (type) {
+            case 'correct':
+                // 正确反馈
+                iconCorrect.classList.remove('hidden');
+                radicalChar.classList.add('feedback-correct');
+                inputField.classList.add('input-correct');
+                this.showMessage('正确！', 'correct');
+                break;
+                
+            case 'wrong':
+                // 错误反馈
+                iconWrong.classList.remove('hidden');
+                radicalChar.classList.add('feedback-wrong');
+                inputField.classList.add('input-wrong');
+                this.showMessage(`错误！正确答案是 ${this.currentRadical.key}`, 'wrong');
+                break;
+        }
+        
+        // 定时清除反馈
+        this.feedbackTimer = setTimeout(() => {
+            this.clearFeedback();
+        }, type === 'correct' ? 200 : 800);
+    }
+    
+    /**
+     * 显示消息
+     */
+    showMessage(text, type) {
+        const { feedbackMessage } = this.elements;
+        feedbackMessage.innerHTML = `<span class="feedback-msg ${type}">${text}</span>`;
+    }
+    
+    /**
+     * 显示连击消息
+     */
+    showComboMessage(combo) {
+        const { feedbackMessage } = this.elements;
+        const messages = [
+            '不错！',
+            '很好！',
+            '太棒了！',
+            '完美！',
+            '无敌！'
+        ];
+        const msgIndex = Math.min(Math.floor(combo / 5) - 1, messages.length - 1);
+        feedbackMessage.innerHTML = `<span class="feedback-msg combo">🔥 ${combo} 连击！${messages[msgIndex]}</span>`;
+        
+        // 连击动画
+        this.elements.combo.parentElement.classList.add('combo-achieved');
+        setTimeout(() => {
+            this.elements.combo.parentElement.classList.remove('combo-achieved');
+        }, 400);
+    }
+    
+    /**
+     * 清除反馈
+     */
+    clearFeedback() {
+        const { radicalChar, inputField, feedbackIcon, iconCorrect, iconWrong, feedbackMessage } = this.elements;
+        
+        if (this.feedbackTimer) {
+            clearTimeout(this.feedbackTimer);
+            this.feedbackTimer = null;
+        }
+        
+        // 隐藏图标
+        feedbackIcon.classList.remove('opacity-100');
+        feedbackIcon.classList.add('opacity-0');
+        iconCorrect.classList.add('hidden');
+        iconWrong.classList.add('hidden');
+        
+        // 移除动画类
+        radicalChar.classList.remove('feedback-correct', 'feedback-wrong');
+        inputField.classList.remove('input-correct', 'input-wrong');
+    }
+    
+    /**
+     * 更新 UI
+     */
+    updateUI() {
+        const { currentCount, totalCount, progressBar, accuracy, combo, comboMultiplier, multiplierValue, maxCombo } = this.elements;
+        
+        // 进度
+        const practiced = this.stats.practicedCount;
+        const total = this.radicalManager.getTotalCount();
+        currentCount.textContent = practiced;
+        totalCount.textContent = total;
+        
+        // 进度条
+        const progress = total > 0 ? (practiced / total) * 100 : 0;
+        progressBar.style.width = `${progress}%`;
+        
+        // 正确率
+        const acc = this.stats.totalAttempts > 0 
+            ? Math.round((this.stats.correctCount / this.stats.totalAttempts) * 100) 
+            : 0;
+        accuracy.textContent = acc;
+        
+        // 连击
+        combo.textContent = this.stats.currentCombo;
+        
+        // 连击倍数（每 10 连击增加 0.5 倍）
+        const multiplier = 1 + Math.floor(this.stats.currentCombo / 10) * 0.5;
+        if (multiplier > 1) {
+            comboMultiplier.classList.remove('hidden');
+            multiplierValue.textContent = multiplier.toFixed(1);
+        } else {
+            comboMultiplier.classList.add('hidden');
+        }
+        
+        // 最高连击
+        maxCombo.textContent = this.stats.maxCombo;
+    }
+    
+    /**
+     * 处理重置
+     */
+    handleReset() {
+        if (confirm('确定要重新开始吗？所有进度将被清除。')) {
+            // 重置统计
+            this.stats = {
+                totalAttempts: 0,
+                correctCount: 0,
+                wrongCount: 0,
+                currentCombo: 0,
+                maxCombo: 0,
+                practicedCount: 0
+            };
+            
+            // 重置字根管理器
+            this.radicalManager.resetWeights();
+            
+            // 清除存储
+            this.storageManager.reset();
+            
+            // 重置答案显示状态
+            this.answerRevealed = false;
+            
+            // 更新 UI
+            this.updateUI();
+            
+            // 显示新字根（会自动隐藏按键提示）
+            this.showNextRadical();
+            
+            // 显示提示
+            this.showMessage('已重置，重新开始！', 'skip');
+        }
+    }
+    
+    /**
+     * 聚焦输入框
+     */
+    focusInput() {
+        // 延迟聚焦，确保动画完成
+        setTimeout(() => {
+            this.elements.inputField.focus();
+        }, 50);
+    }
+}
+
+// 页面加载完成后初始化应用
+document.addEventListener('DOMContentLoaded', () => {
+    window.practiceApp = new PracticeApp();
+});

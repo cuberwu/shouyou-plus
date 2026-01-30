@@ -1,0 +1,447 @@
+/* 首右plus 字根练习 - 水墨风格自定义样式 */
+
+/* ========================================
+   字体加载优化 - 避免 FOUT (Flash of Unstyled Text)
+   ======================================== */
+
+/* 字体加载前：隐藏使用自定义字体的关键元素 */
+.fonts-loading #radical-char,
+.fonts-loading .font-serif-sc {
+    opacity: 0;
+}
+
+/* 字体加载完成后：平滑淡入 */
+.fonts-loaded #radical-char,
+.fonts-loaded .font-serif-sc {
+    opacity: 1;
+    transition: opacity 0.3s ease-out;
+}
+
+/* 字体加载超时后的回退：也显示内容 */
+.fonts-timeout #radical-char,
+.fonts-timeout .font-serif-sc {
+    opacity: 1;
+    transition: opacity 0.3s ease-out;
+}
+
+/* 加载指示器（可选） */
+.fonts-loading #radical-display::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 40px;
+    height: 40px;
+    border: 3px solid rgba(26, 26, 26, 0.1);
+    border-top-color: rgba(26, 26, 26, 0.4);
+    border-radius: 50%;
+    animation: fontLoadingSpin 0.8s linear infinite;
+}
+
+@keyframes fontLoadingSpin {
+    to {
+        transform: translate(-50%, -50%) rotate(360deg);
+    }
+}
+
+/* 确保 radical-display 有相对定位以支持加载指示器 */
+#radical-display {
+    position: relative;
+}
+
+/* ========================================
+   水墨背景效果
+   ======================================== */
+
+.ink-wash-bg {
+    position: absolute;
+    inset: 0;
+    background: 
+        /* 水墨晕染效果 - 右上角 */
+        radial-gradient(
+            ellipse 80% 60% at 90% 10%,
+            rgba(26, 26, 26, 0.03) 0%,
+            transparent 50%
+        ),
+        /* 水墨晕染效果 - 左下角 */
+        radial-gradient(
+            ellipse 60% 80% at 10% 90%,
+            rgba(26, 26, 26, 0.02) 0%,
+            transparent 40%
+        ),
+        /* 宣纸纹理模拟 */
+        url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+    opacity: 0.4;
+}
+
+/* ========================================
+   墨迹卡片样式
+   ======================================== */
+
+.ink-card {
+    background: linear-gradient(
+        135deg,
+        rgba(255, 254, 249, 0.95) 0%,
+        rgba(250, 248, 243, 0.9) 100%
+    );
+    border-radius: 16px;
+    box-shadow: 
+        /* 主阴影 - 模拟墨迹晕染 */
+        0 4px 20px rgba(26, 26, 26, 0.08),
+        /* 内部光泽 */
+        inset 0 1px 0 rgba(255, 255, 255, 0.8),
+        /* 底部墨迹 */
+        0 8px 30px -10px rgba(26, 26, 26, 0.15);
+    border: 1px solid rgba(26, 26, 26, 0.06);
+    position: relative;
+    overflow: hidden;
+}
+
+/* 卡片水墨装饰 */
+.ink-card::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    right: -50%;
+    width: 100%;
+    height: 100%;
+    background: radial-gradient(
+        circle at center,
+        rgba(26, 26, 26, 0.02) 0%,
+        transparent 70%
+    );
+    pointer-events: none;
+}
+
+/* ========================================
+   毛笔笔触分隔线
+   ======================================== */
+
+.brush-stroke-divider {
+    height: 2px;
+    background: linear-gradient(
+        90deg,
+        transparent 0%,
+        rgba(26, 26, 26, 0.15) 20%,
+        rgba(26, 26, 26, 0.25) 50%,
+        rgba(26, 26, 26, 0.15) 80%,
+        transparent 100%
+    );
+    border-radius: 1px;
+    position: relative;
+}
+
+/* 笔触起笔效果 */
+.brush-stroke-divider::before {
+    content: '';
+    position: absolute;
+    left: 15%;
+    top: -1px;
+    width: 4px;
+    height: 4px;
+    background: rgba(26, 26, 26, 0.2);
+    border-radius: 50%;
+}
+
+/* 笔触收笔效果 */
+.brush-stroke-divider::after {
+    content: '';
+    position: absolute;
+    right: 15%;
+    top: -1px;
+    width: 3px;
+    height: 3px;
+    background: rgba(26, 26, 26, 0.15);
+    border-radius: 50%;
+}
+
+/* ========================================
+   字根显示动画
+   ======================================== */
+
+/* 字根淡入效果 */
+.radical-enter {
+    animation: radicalEnter 0.25s ease-out forwards;
+}
+
+@keyframes radicalEnter {
+    0% {
+        opacity: 0;
+        transform: scale(0.9) translateY(10px);
+    }
+    100% {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+}
+
+/* 正确反馈 - 墨迹扩散 */
+.feedback-correct {
+    animation: inkSpreadCorrect 0.3s ease-out forwards;
+}
+
+@keyframes inkSpreadCorrect {
+    0% {
+        text-shadow: 0 0 0 rgba(26, 153, 136, 0);
+    }
+    50% {
+        text-shadow: 0 0 20px rgba(26, 153, 136, 0.4);
+    }
+    100% {
+        text-shadow: 0 0 0 rgba(26, 153, 136, 0);
+    }
+}
+
+/* 错误反馈 - 朱砂闪烁 */
+.feedback-wrong {
+    animation: cinnabarShake 0.2s ease-in-out;
+}
+
+@keyframes cinnabarShake {
+    0%, 100% {
+        transform: translateX(0);
+        color: #1A1A1A;
+    }
+    25% {
+        transform: translateX(-6px);
+        color: #C53D43;
+    }
+    75% {
+        transform: translateX(6px);
+        color: #C53D43;
+    }
+}
+
+/* 连击达成 - 金色光晕 */
+.combo-achieved {
+    animation: comboGlow 0.4s ease-out;
+}
+
+@keyframes comboGlow {
+    0% {
+        box-shadow: 0 0 0 0 rgba(212, 168, 75, 0.7);
+    }
+    50% {
+        box-shadow: 0 0 30px 10px rgba(212, 168, 75, 0.3);
+    }
+    100% {
+        box-shadow: 0 0 0 0 rgba(212, 168, 75, 0);
+    }
+}
+
+/* ========================================
+   输入框状态样式
+   ======================================== */
+
+#input-field:focus {
+    box-shadow: 
+        0 0 0 3px rgba(26, 26, 26, 0.1),
+        0 4px 12px rgba(26, 26, 26, 0.08);
+}
+
+#input-field.input-correct {
+    border-color: #1A9988;
+    background-color: rgba(26, 153, 136, 0.05);
+}
+
+#input-field.input-wrong {
+    border-color: #C53D43;
+    background-color: rgba(197, 61, 67, 0.05);
+    animation: inputShake 0.2s ease-in-out;
+}
+
+@keyframes inputShake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-4px); }
+    75% { transform: translateX(4px); }
+}
+
+/* ========================================
+   按键提示样式
+   ======================================== */
+
+kbd {
+    font-family: 'JetBrains Mono', monospace;
+    transition: all 0.15s ease;
+}
+
+kbd:hover {
+    background-color: #F5F1E8;
+    border-color: rgba(26, 26, 26, 0.2);
+}
+
+/* ========================================
+   反馈消息样式
+   ======================================== */
+
+.feedback-msg {
+    animation: fadeInUp 0.2s ease-out;
+}
+
+@keyframes fadeInUp {
+    0% {
+        opacity: 0;
+        transform: translateY(8px);
+    }
+    100% {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.feedback-msg.correct {
+    color: #1A9988;
+}
+
+.feedback-msg.wrong {
+    color: #C53D43;
+}
+
+.feedback-msg.skip {
+    color: #999999;
+}
+
+.feedback-msg.combo {
+    color: #D4A84B;
+    font-weight: 600;
+}
+
+/* ========================================
+   进度条动画
+   ======================================== */
+
+#progress-bar {
+    transition: width 0.3s ease-out;
+    background: linear-gradient(
+        90deg,
+        #666666 0%,
+        #333333 50%,
+        #1A1A1A 100%
+    );
+}
+
+/* ========================================
+   响应式调整
+   ======================================== */
+
+@media (max-width: 768px) {
+    .ink-card {
+        border-radius: 12px;
+    }
+    
+    #radical-char {
+        font-size: 5rem;
+    }
+    
+    #key-hint {
+        font-size: 1.5rem;
+        padding: 0.5rem 1rem;
+    }
+}
+
+@media (max-width: 480px) {
+    #radical-char {
+        font-size: 4rem;
+    }
+}
+
+/* ========================================
+   减少动画偏好支持
+   ======================================== */
+
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+}
+
+/* ========================================
+   打印样式
+   ======================================== */
+
+@media print {
+    .ink-wash-bg {
+        display: none;
+    }
+    
+    .ink-card {
+        box-shadow: none;
+        border: 1px solid #ccc;
+    }
+}
+
+/* ========================================
+   水墨装饰元素
+   ======================================== */
+
+/* 印章效果（可用于 Logo 或成就） */
+.ink-seal {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 48px;
+    height: 48px;
+    border: 2px solid #C53D43;
+    border-radius: 4px;
+    color: #C53D43;
+    font-family: 'Noto Serif SC', serif;
+    font-weight: 700;
+    font-size: 1.25rem;
+    transform: rotate(-5deg);
+    opacity: 0.9;
+}
+
+/* 墨点装饰 */
+.ink-dot {
+    width: 6px;
+    height: 6px;
+    background: radial-gradient(
+        circle at 30% 30%,
+        rgba(26, 26, 26, 0.6) 0%,
+        rgba(26, 26, 26, 0.3) 50%,
+        transparent 70%
+    );
+    border-radius: 50%;
+}
+
+/* ========================================
+   滚动条样式
+   ======================================== */
+
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: rgba(26, 26, 26, 0.05);
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+    background: rgba(26, 26, 26, 0.2);
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: rgba(26, 26, 26, 0.3);
+}
+
+/* ========================================
+   选中文本样式
+   ======================================== */
+
+::selection {
+    background: rgba(26, 26, 26, 0.15);
+    color: #1A1A1A;
+}
+
+::-moz-selection {
+    background: rgba(26, 26, 26, 0.15);
+    color: #1A1A1A;
+}
