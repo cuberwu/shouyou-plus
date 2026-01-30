@@ -272,39 +272,119 @@ kbd:hover {
 }
 
 /* ========================================
-   反馈消息样式
+   反馈消息样式 - 水墨风效果
    ======================================== */
 
 .feedback-msg {
-    animation: fadeInUp 0.2s ease-out;
+    font-size: 1.75rem;
+    font-weight: 600;
+    font-family: 'Noto Serif SC', serif;
+    animation: inkFadeIn 0.4s ease-out;
+    position: relative;
+    display: inline-block;
 }
 
-@keyframes fadeInUp {
+@keyframes inkFadeIn {
     0% {
         opacity: 0;
-        transform: translateY(8px);
+        transform: translateY(8px) scale(0.9);
+        filter: blur(4px);
+    }
+    50% {
+        filter: blur(1px);
     }
     100% {
         opacity: 1;
-        transform: translateY(0);
+        transform: translateY(0) scale(1);
+        filter: blur(0);
     }
 }
 
+/* 正确反馈 - 青绿墨迹晕染效果 */
 .feedback-msg.correct {
     color: #1A9988;
+    text-shadow:
+        0 0 8px rgba(26, 153, 136, 0.4),
+        0 0 20px rgba(26, 153, 136, 0.2),
+        0 2px 4px rgba(26, 153, 136, 0.3);
+    animation: inkFadeIn 0.4s ease-out, inkGlowCorrect 1.5s ease-in-out infinite;
 }
 
+@keyframes inkGlowCorrect {
+    0%, 100% {
+        text-shadow:
+            0 0 8px rgba(26, 153, 136, 0.4),
+            0 0 20px rgba(26, 153, 136, 0.2),
+            0 2px 4px rgba(26, 153, 136, 0.3);
+    }
+    50% {
+        text-shadow:
+            0 0 12px rgba(26, 153, 136, 0.6),
+            0 0 30px rgba(26, 153, 136, 0.3),
+            0 2px 6px rgba(26, 153, 136, 0.4);
+    }
+}
+
+/* 错误反馈 - 朱砂墨迹效果 */
 .feedback-msg.wrong {
     color: #C53D43;
+    text-shadow:
+        0 0 8px rgba(197, 61, 67, 0.4),
+        0 0 20px rgba(197, 61, 67, 0.2),
+        0 2px 4px rgba(197, 61, 67, 0.3);
+    animation: inkFadeIn 0.4s ease-out, inkShakeWrong 0.5s ease-in-out;
 }
 
+@keyframes inkShakeWrong {
+    0%, 100% {
+        transform: translateX(0);
+    }
+    10%, 30%, 50%, 70%, 90% {
+        transform: translateX(-3px);
+    }
+    20%, 40%, 60%, 80% {
+        transform: translateX(3px);
+    }
+}
+
+/* 跳过提示 - 淡墨效果 */
 .feedback-msg.skip {
-    color: #999999;
+    color: #666666;
+    text-shadow:
+        0 1px 2px rgba(26, 26, 26, 0.1);
+    font-size: 1.25rem;
 }
 
+/* 连击提示 - 金色墨迹效果 */
 .feedback-msg.combo {
     color: #D4A84B;
-    font-weight: 600;
+    font-weight: 700;
+    text-shadow:
+        0 0 10px rgba(212, 168, 75, 0.5),
+        0 0 25px rgba(212, 168, 75, 0.3),
+        0 2px 4px rgba(212, 168, 75, 0.4);
+    animation: inkFadeIn 0.4s ease-out, comboGlowPulse 0.8s ease-in-out;
+}
+
+@keyframes comboGlowPulse {
+    0% {
+        transform: scale(1);
+        text-shadow:
+            0 0 10px rgba(212, 168, 75, 0.5),
+            0 0 25px rgba(212, 168, 75, 0.3);
+    }
+    50% {
+        transform: scale(1.1);
+        text-shadow:
+            0 0 20px rgba(212, 168, 75, 0.8),
+            0 0 40px rgba(212, 168, 75, 0.5);
+    }
+    100% {
+        transform: scale(1);
+        text-shadow:
+            0 0 10px rgba(212, 168, 75, 0.5),
+            0 0 25px rgba(212, 168, 75, 0.3);
+    }
 }
 
 /* ========================================
@@ -319,6 +399,69 @@ kbd:hover {
         #333333 50%,
         #1A1A1A 100%
     );
+}
+
+/* ========================================
+   主布局 Grid 系统
+   ======================================== */
+
+.main-grid {
+    display: grid;
+    gap: 1.5rem;
+    /* 默认移动端：单列布局 */
+    grid-template-columns: 1fr;
+    grid-template-areas:
+        "stats"
+        "practice"
+        "chart";
+}
+
+.stats-panel {
+    grid-area: stats;
+}
+
+.practice-panel {
+    grid-area: practice;
+}
+
+.chart-panel {
+    grid-area: chart;
+}
+
+/* 字根图隐藏时的布局 */
+.chart-panel.hidden {
+    display: none;
+}
+
+/* 平板及以上：两列布局（统计 + 练习），字根图在下方跨两列 */
+@media (min-width: 768px) {
+    .main-grid {
+        grid-template-columns: 240px 1fr;
+        grid-template-areas:
+            "stats practice"
+            "chart chart";
+        align-items: stretch;
+    }
+    
+    /* 字根图显示时，跨两列 */
+    .chart-panel:not(.hidden) {
+        display: block;
+    }
+}
+
+/* 大屏幕：保持两列布局，增加统计面板宽度 */
+@media (min-width: 1024px) {
+    .main-grid {
+        grid-template-columns: 260px 1fr;
+    }
+}
+
+/* 超大屏幕：进一步优化间距 */
+@media (min-width: 1400px) {
+    .main-grid {
+        grid-template-columns: 280px 1fr;
+        gap: 2rem;
+    }
 }
 
 /* ========================================
@@ -444,4 +587,419 @@ kbd:hover {
 ::-moz-selection {
     background: rgba(26, 26, 26, 0.15);
     color: #1A1A1A;
+}
+
+/* ========================================
+   字根图键盘样式
+   ======================================== */
+
+.radical-keyboard {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    max-width: 100%;
+    overflow-x: auto;
+    padding-top: 4px;  /* 防止第一行hover时上边框被裁剪 */
+}
+
+.keyboard-row {
+    display: flex;
+    gap: 6px;
+    justify-content: center;
+}
+
+/* 第二行偏移 */
+.row-offset-1 {
+    padding-left: 39px;
+}
+
+/* 第三行偏移 */
+.row-offset-2 {
+    padding-left: 78px;
+}
+
+.key-cell {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    width: 72px;
+    min-height: 72px;
+    padding: 6px 4px;
+    background: linear-gradient(
+        135deg,
+        rgba(255, 255, 255, 0.95) 0%,
+        rgba(250, 248, 243, 0.9) 100%
+    );
+    border: 1px solid rgba(26, 26, 26, 0.1);
+    border-radius: 8px;
+    box-shadow:
+        0 2px 4px rgba(26, 26, 26, 0.05),
+        inset 0 1px 0 rgba(255, 255, 255, 0.8);
+    transition: all 0.15s ease;
+    cursor: default;
+}
+
+.key-cell:hover {
+    transform: translateY(-2px);
+    box-shadow:
+        0 4px 8px rgba(26, 26, 26, 0.1),
+        inset 0 1px 0 rgba(255, 255, 255, 0.8);
+    border-color: rgba(26, 26, 26, 0.2);
+}
+
+/* 特殊按键（笔画键）样式 */
+.key-cell.special-key {
+    background: linear-gradient(
+        135deg,
+        rgba(197, 61, 67, 0.05) 0%,
+        rgba(197, 61, 67, 0.02) 100%
+    );
+    border-color: rgba(197, 61, 67, 0.2);
+}
+
+.key-cell.special-key:hover {
+    border-color: rgba(197, 61, 67, 0.4);
+}
+
+.key-letter {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 14px;
+    font-weight: 600;
+    color: #1A9988;
+    margin-bottom: 2px;
+}
+
+.key-letter-special {
+    color: #C53D43;
+}
+
+.key-radicals {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 14px;
+    font-weight: 500;
+    color: #1A9988;
+    text-align: center;
+    line-height: 1.3;
+}
+
+.key-radicals-special {
+    color: #C53D43;
+}
+
+/* 蓝色字根样式 */
+.key-radicals-blue {
+    color: #2563EB;
+}
+
+.key-letter-blue {
+    color: #2563EB;
+}
+
+/* 字根图区域动画 */
+#radical-chart-section:not(.hidden) {
+    animation: fadeInChart 0.3s ease-out;
+}
+
+@keyframes fadeInChart {
+    0% {
+        opacity: 0;
+        transform: scale(0.98);
+    }
+    100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+/* 字根图面板内部布局 */
+.chart-panel .ink-card {
+    display: flex;
+    flex-direction: column;
+}
+
+.chart-panel .radical-keyboard {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+/* 响应式调整 */
+@media (max-width: 900px) {
+    .key-cell {
+        width: 60px;
+        min-height: 60px;
+        padding: 4px 2px;
+    }
+    
+    .key-letter {
+        font-size: 12px;
+    }
+    
+    .key-radicals {
+        font-size: 12px;
+    }
+    
+    .row-offset-1 {
+        padding-left: 16px;
+    }
+    
+    .row-offset-2 {
+        padding-left: 32px;
+    }
+}
+
+@media (max-width: 700px) {
+    .key-cell {
+        width: 48px;
+        min-height: 52px;
+        padding: 3px 2px;
+        border-radius: 6px;
+    }
+    
+    .key-letter {
+        font-size: 10px;
+    }
+    
+    .key-radicals {
+        font-size: 10px;
+    }
+    
+    .keyboard-row {
+        gap: 4px;
+    }
+    
+    .radical-keyboard {
+        gap: 4px;
+    }
+    
+    .row-offset-1 {
+        padding-left: 12px;
+    }
+    
+    .row-offset-2 {
+        padding-left: 24px;
+    }
+}
+
+@media (max-width: 500px) {
+    .key-cell {
+        width: 32px;
+        min-height: 44px;
+        padding: 2px 1px;
+        border-radius: 4px;
+    }
+    
+    .key-letter {
+        font-size: 9px;
+    }
+    
+    .key-radicals {
+        font-size: 9px;
+        line-height: 1.2;
+    }
+    
+    .keyboard-row {
+        gap: 2px;
+    }
+    
+    .radical-keyboard {
+        gap: 3px;
+    }
+    
+    .row-offset-1 {
+        padding-left: 8px;
+    }
+    
+    .row-offset-2 {
+        padding-left: 16px;
+    }
+}
+
+/* 高亮当前按键 */
+.key-cell.highlight {
+    background: linear-gradient(
+        135deg,
+        rgba(212, 168, 75, 0.2) 0%,
+        rgba(212, 168, 75, 0.1) 100%
+    );
+    border-color: #D4A84B;
+    box-shadow:
+        0 0 12px rgba(212, 168, 75, 0.3),
+        inset 0 1px 0 rgba(255, 255, 255, 0.8);
+    transform: translateY(-2px);
+}
+
+/* ========================================
+   练习完成庆祝弹窗
+   ======================================== */
+
+.completion-modal {
+    position: fixed;
+    inset: 0;
+    background: rgba(26, 26, 26, 0.6);
+    backdrop-filter: blur(4px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.completion-modal.show {
+    opacity: 1;
+}
+
+.completion-content {
+    background: linear-gradient(
+        135deg,
+        rgba(255, 254, 249, 0.98) 0%,
+        rgba(250, 248, 243, 0.95) 100%
+    );
+    border-radius: 20px;
+    padding: 2.5rem 3rem;
+    max-width: 420px;
+    width: 90%;
+    text-align: center;
+    box-shadow:
+        0 20px 60px rgba(26, 26, 26, 0.2),
+        0 0 0 1px rgba(26, 26, 26, 0.05),
+        inset 0 1px 0 rgba(255, 255, 255, 0.9);
+    transform: scale(0.9) translateY(20px);
+    transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.completion-modal.show .completion-content {
+    transform: scale(1) translateY(0);
+}
+
+.completion-icon {
+    font-size: 4rem;
+    margin-bottom: 1rem;
+    animation: celebrateIcon 0.6s ease-out;
+}
+
+@keyframes celebrateIcon {
+    0% {
+        transform: scale(0) rotate(-180deg);
+        opacity: 0;
+    }
+    50% {
+        transform: scale(1.2) rotate(10deg);
+    }
+    100% {
+        transform: scale(1) rotate(0deg);
+        opacity: 1;
+    }
+}
+
+.completion-title {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 2rem;
+    font-weight: 700;
+    color: #1A1A1A;
+    margin-bottom: 0.5rem;
+    text-shadow: 0 2px 4px rgba(26, 26, 26, 0.1);
+}
+
+.completion-subtitle {
+    font-size: 1.1rem;
+    color: #666666;
+    margin-bottom: 1.5rem;
+}
+
+.completion-stats {
+    display: flex;
+    justify-content: center;
+    gap: 2rem;
+    margin-bottom: 1.5rem;
+    padding: 1.25rem;
+    background: rgba(26, 26, 26, 0.03);
+    border-radius: 12px;
+}
+
+.stat-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.stat-value {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: #1A9988;
+}
+
+.stat-label {
+    font-size: 0.85rem;
+    color: #888888;
+    margin-top: 0.25rem;
+}
+
+.completion-tip {
+    font-size: 0.95rem;
+    color: #666666;
+    margin-bottom: 1.5rem;
+    line-height: 1.5;
+}
+
+.completion-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.875rem 2.5rem;
+    font-family: 'Noto Serif SC', serif;
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #FFFEF9;
+    background: linear-gradient(
+        135deg,
+        #1A9988 0%,
+        #158577 100%
+    );
+    border: none;
+    border-radius: 12px;
+    cursor: pointer;
+    box-shadow:
+        0 4px 12px rgba(26, 153, 136, 0.3),
+        inset 0 1px 0 rgba(255, 255, 255, 0.2);
+    transition: all 0.2s ease;
+}
+
+.completion-btn:hover {
+    transform: translateY(-2px);
+    box-shadow:
+        0 6px 20px rgba(26, 153, 136, 0.4),
+        inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+.completion-btn:active {
+    transform: translateY(0);
+}
+
+/* 响应式调整 */
+@media (max-width: 480px) {
+    .completion-content {
+        padding: 2rem 1.5rem;
+    }
+    
+    .completion-icon {
+        font-size: 3rem;
+    }
+    
+    .completion-title {
+        font-size: 1.5rem;
+    }
+    
+    .completion-stats {
+        gap: 1rem;
+        padding: 1rem;
+    }
+    
+    .stat-value {
+        font-size: 1.5rem;
+    }
 }

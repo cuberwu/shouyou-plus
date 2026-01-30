@@ -129,12 +129,13 @@
             <p class="mt-2 text-ink-light text-sm md:text-base">字根练习</p>
         </header>
         
-        <!-- 主内容区 -->
-        <main class="flex-1 flex flex-col lg:flex-row items-start justify-center gap-6 px-4 pb-8 max-w-6xl mx-auto w-full">
+        <!-- 主内容区 - 使用 Grid 布局确保卡片对齐 -->
+        <main class="flex-1 px-4 pb-8 max-w-6xl mx-auto w-full">
+            <div class="main-grid">
             
             <!-- 左侧：统计信息面板 -->
-            <aside class="w-full lg:w-64 shrink-0">
-                <div class="ink-card p-6 space-y-6">
+            <aside class="stats-panel">
+                <div class="ink-card p-6 space-y-6 h-full">
                     <!-- 进度 -->
                     <div class="space-y-2">
                         <h3 class="text-ink-light text-sm font-medium flex items-center gap-2">
@@ -196,6 +197,14 @@
                     <!-- 分隔线 -->
                     <div class="brush-stroke-divider"></div>
                     
+                    <!-- 字根图开关按钮 -->
+                    <button id="toggle-chart-btn" class="w-full py-2 px-4 text-sm text-ink-light hover:text-ink-black border border-ink-faint/30 rounded-lg hover:border-ink-light transition-all duration-200 cursor-pointer flex items-center justify-center gap-2">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h7"/>
+                        </svg>
+                        <span id="toggle-chart-text">显示字根图</span>
+                    </button>
+                    
                     <!-- 重置按钮 -->
                     <button id="reset-btn" class="w-full py-2 px-4 text-sm text-ink-light hover:text-ink-black border border-ink-faint/30 rounded-lg hover:border-ink-light transition-all duration-200 cursor-pointer">
                         重新开始
@@ -203,9 +212,9 @@
                 </div>
             </aside>
             
-            <!-- 右侧：练习区域 -->
-            <section class="flex-1 w-full max-w-2xl">
-                <div class="ink-card p-8 md:p-12">
+            <!-- 中间：练习区域 -->
+            <section class="practice-panel">
+                <div class="ink-card p-8 md:p-12 h-full flex flex-col">
                     <!-- 字根显示区 -->
                     <div id="radical-display" class="text-center mb-8">
                         <!-- 字根大字 -->
@@ -255,23 +264,152 @@
                     </div>
                     
                     <!-- 反馈消息 -->
-                    <div id="feedback-message" class="mt-4 text-center h-8">
+                    <div id="feedback-message" class="mt-6 text-center min-h-[3rem]">
                         <!-- 动态显示反馈消息 -->
                     </div>
                 </div>
-                
-                <!-- 快捷提示 -->
-                <div class="mt-4 text-center text-ink-faint text-xs space-x-4">
-                    <span>按对自动跳下一个</span>
-                    <span>·</span>
-                    <span>按错会更频繁出现</span>
-                </div>
             </section>
+            
+            <!-- 右侧：字根图区域 -->
+            <section id="radical-chart-section" class="chart-panel hidden">
+                <div class="ink-card p-6 h-full">
+                <!-- 标题栏 -->
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="font-serif-sc text-lg font-semibold text-ink-black">首右plus版字根图</h2>
+                    <button id="close-chart-btn" class="text-ink-faint hover:text-ink-dark transition-colors p-1" title="关闭字根图">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                        </svg>
+                    </button>
+                </div>
+                
+                <!-- 键盘字根图 -->
+                <div id="radical-keyboard" class="radical-keyboard">
+                    <!-- 第一行: Q W E R T Y U I O P -->
+                    <div class="keyboard-row">
+                        <div class="key-cell" data-key="Q">
+                            <span class="key-letter">Q</span>
+                            <span class="key-radicals"><span class="key-radicals-blue">火</span><br>龶</span>
+                        </div>
+                        <div class="key-cell" data-key="W">
+                            <span class="key-letter">W</span>
+                            <span class="key-radicals">王亠<br>攵</span>
+                        </div>
+                        <div class="key-cell" data-key="E">
+                            <span class="key-letter">E</span>
+                            <span class="key-radicals">禾阝</span>
+                        </div>
+                        <div class="key-cell" data-key="R">
+                            <span class="key-letter">R</span>
+                            <span class="key-radicals">亻彳</span>
+                        </div>
+                        <div class="key-cell" data-key="T">
+                            <span class="key-letter">T</span>
+                            <span class="key-radicals">土田</span>
+                        </div>
+                        <div class="key-cell" data-key="Y">
+                            <span class="key-letter">Y</span>
+                            <span class="key-radicals">月又<br>雨</span>
+                        </div>
+                        <div class="key-cell" data-key="U">
+                            <span class="key-letter">U</span>
+                            <span class="key-radicals">氵</span>
+                        </div>
+                        <div class="key-cell" data-key="I">
+                            <span class="key-letter">I</span>
+                            <span class="key-radicals">纟厶</span>
+                        </div>
+                        <div class="key-cell" data-key="O">
+                            <span class="key-letter">O</span>
+                            <span class="key-radicals">虫<span class="key-radicals-blue">刂</span></span>
+                        </div>
+                        <div class="key-cell special-key" data-key="P">
+                            <span class="key-letter key-letter-special">P</span>
+                            <span class="key-radicals key-radicals-special">撇</span>
+                        </div>
+                    </div>
+                    
+                    <!-- 第二行: A S D F G H J K L -->
+                    <div class="keyboard-row row-offset-1">
+                        <div class="key-cell" data-key="A">
+                            <span class="key-letter">A</span>
+                            <span class="key-radicals">讠</span>
+                        </div>
+                        <div class="key-cell special-key" data-key="S">
+                            <span class="key-letter key-letter-special">S</span>
+                            <span class="key-radicals key-radicals-special">竖<br>饣石尸</span>
+                        </div>
+                        <div class="key-cell special-key" data-key="D">
+                            <span class="key-letter key-letter-special">D</span>
+                            <span class="key-radicals key-radicals-special">点<span class="key-radicals-blue">目</span></span>
+                        </div>
+                        <div class="key-cell" data-key="F">
+                            <span class="key-letter">F</span>
+                            <span class="key-radicals">扌<span class="key-radicals-blue">十</span></span>
+                        </div>
+                        <div class="key-cell" data-key="G">
+                            <span class="key-letter">G</span>
+                            <span class="key-radicals"><span class="key-radicals-blue">竹辶</span><br><span class="key-radicals-blue">山</span>弓</span>
+                        </div>
+                        <div class="key-cell special-key" data-key="H">
+                            <span class="key-letter key-letter-special">H</span>
+                            <span class="key-radicals key-radicals-special">横</span>
+                        </div>
+                        <div class="key-cell" data-key="J">
+                            <span class="key-letter">J</span>
+                            <span class="key-radicals">钅几巾</span>
+                        </div>
+                        <div class="key-cell" data-key="K">
+                            <span class="key-letter">K</span>
+                            <span class="key-radicals">口</span>
+                        </div>
+                        <div class="key-cell" data-key="L">
+                            <span class="key-letter">L</span>
+                            <span class="key-radicals"><span class="key-radicals-blue">日⺈</span><br>力<span class="key-radicals-blue">大</span></span>
+                        </div>
+                    </div>
+                    
+                    <!-- 第三行: Z X C V B N M -->
+                    <div class="keyboard-row row-offset-2">
+                        <div class="key-cell" data-key="Z">
+                            <span class="key-letter">Z</span>
+                            <span class="key-radicals">⻊子<br><span class="key-radicals-blue">西疒</span></span>
+                        </div>
+                        <div class="key-cell" data-key="X">
+                            <span class="key-letter">X</span>
+                            <span class="key-radicals">忄小<br>彐<span class="key-radicals-blue">广</span></span>
+                        </div>
+                        <div class="key-cell" data-key="C">
+                            <span class="key-letter">C</span>
+                            <span class="key-radicals">艹车<br>乂寸</span>
+                        </div>
+                        <div class="key-cell special-key" data-key="V">
+                            <span class="key-letter key-letter-special">V</span>
+                            <span class="key-radicals key-radicals-special">折<br>舟</span>
+                        </div>
+                        <div class="key-cell" data-key="B">
+                            <span class="key-letter">B</span>
+                            <span class="key-radicals">宀贝<br>勹八<span class="key-radicals-blue">犭</span></span>
+                        </div>
+                        <div class="key-cell" data-key="N">
+                            <span class="key-letter">N</span>
+                            <span class="key-radicals">女鸟</span>
+                        </div>
+                        <div class="key-cell" data-key="M">
+                            <span class="key-letter">M</span>
+                            <span class="key-radicals">木门</span>
+                        </div>
+                    </div>
+                </div>
+                </div><!-- 关闭 ink-card -->
+            </section>
+            
+            </div><!-- 关闭 main-grid -->
         </main>
         
         <!-- 页脚 -->
         <footer class="py-4 text-center text-ink-faint text-xs">
-            <p>首右plus 字根练习 · 水墨风格</p>
+            <p>首右plus · 字根练习</p>
         </footer>
     </div>
     

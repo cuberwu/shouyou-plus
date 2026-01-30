@@ -15,6 +15,9 @@ class PracticeApp {
         // 答案是否已显示
         this.answerRevealed = false;
         
+        // 是否正在过渡到下一个字根（防止快速连续按键导致跳过字根）
+        this.isTransitioning = false;
+        
         // 统计数据
         this.stats = {
             totalAttempts: 0,
@@ -79,7 +82,13 @@ class PracticeApp {
             comboMultiplier: document.getElementById('combo-multiplier'),
             multiplierValue: document.getElementById('multiplier-value'),
             maxCombo: document.getElementById('max-combo'),
-            resetBtn: document.getElementById('reset-btn')
+            resetBtn: document.getElementById('reset-btn'),
+            // 字根图相关元素
+            radicalChartSection: document.getElementById('radical-chart-section'),
+            toggleChartBtn: document.getElementById('toggle-chart-btn'),
+            toggleChartText: document.getElementById('toggle-chart-text'),
+            closeChartBtn: document.getElementById('close-chart-btn'),
+            radicalKeyboard: document.getElementById('radical-keyboard')
         };
     }
     
@@ -103,6 +112,11 @@ class PracticeApp {
         if (savedData.practicedRadicals) {
             this.radicalManager.restorePracticed(savedData.practicedRadicals);
         }
+        
+        // 恢复练习计数器
+        if (savedData.practiceCounter) {
+            this.radicalManager.restorePracticeCounter(savedData.practiceCounter);
+        }
     }
     
     /**
@@ -112,7 +126,8 @@ class PracticeApp {
         this.storageManager.saveState({
             stats: this.stats,
             weights: this.radicalManager.getWeightsData(),
-            practicedRadicals: this.radicalManager.getPracticedData()
+            practicedRadicals: this.radicalManager.getPracticedData(),
+            practiceCounter: this.radicalManager.getPracticeCounter()
         });
     }
     
@@ -130,6 +145,16 @@ class PracticeApp {
         // 重置按钮
         this.elements.resetBtn.addEventListener('click', () => this.handleReset());
         
+        // 字根图开关按钮
+        if (this.elements.toggleChartBtn) {
+            this.elements.toggleChartBtn.addEventListener('click', () => this.toggleRadicalChart());
+        }
+        
+        // 字根图关闭按钮
+        if (this.elements.closeChartBtn) {
+            this.elements.closeChartBtn.addEventListener('click', () => this.hideRadicalChart());
+        }
+        
         // 页面可见性变化时保存数据
         document.addEventListener('visibilitychange', () => {
             if (document.hidden) {
@@ -141,6 +166,115 @@ class PracticeApp {
         window.addEventListener('beforeunload', () => {
             this.saveToStorage();
         });
+        
+        // 恢复字根图显示状态
+        this.restoreChartState();
+    }
+    
+    /**
+     * 切换字根图显示/隐藏
+     */
+    toggleRadicalChart() {
+        const { radicalChartSection } = this.elements;
+        if (radicalChartSection) {
+            const isHidden = radicalChartSection.classList.contains('hidden');
+            if (isHidden) {
+                this.showRadicalChart();
+            } else {
+                this.hideRadicalChart();
+            }
+        }
+    }
+    
+    /**
+     * 显示字根图
+     */
+    showRadicalChart() {
+        const { radicalChartSection, toggleChartText } = this.elements;
+        if (radicalChartSection) {
+            radicalChartSection.classList.remove('hidden');
+            if (toggleChartText) {
+                toggleChartText.textContent = '隐藏字根图';
+            }
+            // 保存状态
+            this.saveChartState(true);
+        }
+    }
+    
+    /**
+     * 隐藏字根图
+     */
+    hideRadicalChart() {
+        const { radicalChartSection, toggleChartText } = this.elements;
+        if (radicalChartSection) {
+            radicalChartSection.classList.add('hidden');
+            if (toggleChartText) {
+                toggleChartText.textContent = '显示字根图';
+            }
+            // 保存状态
+            this.saveChartState(false);
+        }
+        // 聚焦输入框
+        this.focusInput();
+    }
+    
+    /**
+     * 保存字根图显示状态
+     */
+    saveChartState(isVisible) {
+        try {
+            localStorage.setItem('shouyou_plus_chart_visible', isVisible ? 'true' : 'false');
+        } catch (e) {
+            console.warn('保存字根图状态失败:', e);
+        }
+    }
+    
+    /**
+     * 恢复字根图显示状态
+     */
+    restoreChartState() {
+        try {
+            const isVisible = localStorage.getItem('shouyou_plus_chart_visible') === 'true';
+            if (isVisible) {
+                this.showRadicalChart();
+            }
+        } catch (e) {
+            console.warn('恢复字根图状态失败:', e);
+        }
+    }
+    
+    /**
+     * 高亮字根图中的按键
+     * @param {string} key - 按键字符
+     */
+    highlightKey(key) {
+        const { radicalKeyboard } = this.elements;
+        if (!radicalKeyboard) return;
+        
+        // 移除之前的高亮
+        const prevHighlight = radicalKeyboard.querySelector('.key-cell.highlight');
+        if (prevHighlight) {
+            prevHighlight.classList.remove('highlight');
+        }
+        
+        // 添加新的高亮
+        const keyCell = radicalKeyboard.querySelector(`[data-key="${key.toUpperCase()}"]`);
+        if (keyCell) {
+            keyCell.classList.add('highlight');
+        }
+    }
+    
+    /**
+     * 清除字根图高亮
+     */
+    clearKeyHighlight() {
+        const { radicalKeyboard } = this.elements;
+        if (!radicalKeyboard) return;
+        
+        const highlighted = radicalKeyboard.querySelector('.key-cell.highlight');
+        if (highlighted) {
+            highlighted.classList.remove('highlight');
+        }
     }
     
     /**
@@ -199,6 +333,9 @@ class PracticeApp {
     checkAnswer(input) {
         if (!this.currentRadical) return;
         
+        // 如果正在过渡到下一个字根，忽略输入（防止快速连续按键导致跳过字根）
+        if (this.isTransitioning) return;
+        
         const isCorrect = this.radicalManager.checkAnswer(input, this.currentRadical);
         
         this.stats.totalAttempts++;
@@ -226,6 +363,9 @@ class PracticeApp {
             this.stats.maxCombo = this.stats.currentCombo;
         }
         
+        // 检查是否是首次练习该字根（用于完成提示）
+        const wasAllPracticed = this.radicalManager.isAllPracticed();
+        
         // 标记为已练习
         this.radicalManager.markPracticed(this.currentRadical.id);
         this.stats.practicedCount = this.radicalManager.getPracticedCount();
@@ -236,15 +376,87 @@ class PracticeApp {
         // 显示反馈
         this.showFeedback('correct');
         
+        // 检查是否刚刚完成所有字根的首次练习
+        const isNowAllPracticed = this.radicalManager.isAllPracticed();
+        if (!wasAllPracticed && isNowAllPracticed) {
+            // 首次完成所有字根练习，显示完成提示
+            this.showCompletionCelebration();
+        }
+        
         // 连击提示
         if (this.stats.currentCombo > 0 && this.stats.currentCombo % 5 === 0) {
             this.showComboMessage(this.stats.currentCombo);
         }
         
+        // 设置过渡标志，防止快速连续按键导致跳过字根
+        this.isTransitioning = true;
+        
         // 延迟显示下一个字根
         setTimeout(() => {
             this.showNextRadical();
         }, 200);
+    }
+    
+    /**
+     * 显示练习完成庆祝提示
+     */
+    showCompletionCelebration() {
+        const stats = this.radicalManager.getLearningStats();
+        const accuracy = this.stats.totalAttempts > 0 
+            ? Math.round((this.stats.correctCount / this.stats.totalAttempts) * 100) 
+            : 0;
+        
+        // 创建庆祝弹窗
+        const modal = document.createElement('div');
+        modal.className = 'completion-modal';
+        modal.innerHTML = `
+            <div class="completion-content">
+                <div class="completion-icon">🎉</div>
+                <h2 class="completion-title">恭喜完成！</h2>
+                <p class="completion-subtitle">你已经练习过所有 ${stats.totalCount} 个字根！</p>
+                <div class="completion-stats">
+                    <div class="stat-item">
+                        <span class="stat-value">${accuracy}%</span>
+                        <span class="stat-label">正确率</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-value">${this.stats.maxCombo}</span>
+                        <span class="stat-label">最高连击</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-value">${stats.masteredCount}</span>
+                        <span class="stat-label">已掌握</span>
+                    </div>
+                </div>
+                <p class="completion-tip">继续练习可以巩固记忆，系统会智能安排复习！</p>
+                <button class="completion-btn" onclick="this.closest('.completion-modal').remove()">继续练习</button>
+            </div>
+        `;
+        
+        document.body.appendChild(modal);
+        
+        // 添加进入动画
+        requestAnimationFrame(() => {
+            modal.classList.add('show');
+        });
+        
+        // 点击背景关闭
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                modal.remove();
+                this.focusInput();
+            }
+        });
+        
+        // 按任意键关闭
+        const closeOnKey = (e) => {
+            if (e.key === 'Escape' || e.key === 'Enter' || e.key === ' ') {
+                modal.remove();
+                document.removeEventListener('keydown', closeOnKey);
+                this.focusInput();
+            }
+        };
+        document.addEventListener('keydown', closeOnKey);
     }
     
     /**
@@ -291,6 +503,9 @@ class PracticeApp {
         // 重置答案显示状态
         this.answerRevealed = false;
         
+        // 重置过渡标志
+        this.isTransitioning = false;
+        
         // 清除之前的反馈状态
         this.clearFeedback();
         
@@ -301,6 +516,9 @@ class PracticeApp {
             // 更新显示
             this.elements.radicalChar.textContent = this.currentRadical.char;
             this.elements.keyHint.textContent = this.currentRadical.key;
+            
+            // 高亮字根图中对应的按键
+            this.highlightKey(this.currentRadical.key);
             
             // 添加进入动画
             this.elements.radicalChar.classList.remove('radical-enter');
@@ -319,6 +537,10 @@ class PracticeApp {
         if (this.elements.keyHintContainer) {
             this.elements.keyHintContainer.classList.remove('opacity-0');
             this.elements.keyHintContainer.classList.add('opacity-100');
+        }
+        // 高亮字根图中对应的按键
+        if (this.currentRadical) {
+            this.highlightKey(this.currentRadical.key);
         }
     }
     
@@ -430,6 +652,9 @@ class PracticeApp {
         // 移除动画类
         radicalChar.classList.remove('feedback-correct', 'feedback-wrong');
         inputField.classList.remove('input-correct', 'input-wrong');
+        
+        // 清除反馈消息
+        feedbackMessage.innerHTML = '';
     }
     
     /**
