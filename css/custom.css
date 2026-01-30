@@ -1003,3 +1003,54 @@ kbd:hover {
         font-size: 1.5rem;
     }
 }
+
+/* ========================================
+   连击消息覆盖层（独立于反馈消息）
+   ======================================== */
+
+.combo-message-overlay {
+    position: fixed;
+    bottom: 10%;
+    left: 50%;
+    transform: translateX(-50%) translateY(20px);
+    z-index: 100;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.combo-message-overlay.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+}
+
+.combo-message-overlay.fade-out {
+    opacity: 0;
+    transform: translateX(-50%) translateY(10px);
+}
+
+.combo-message-overlay .feedback-msg.combo {
+    font-size: 2.5rem;
+    padding: 0.5rem 1.5rem;
+    background: rgba(255, 254, 249, 0.95);
+    border-radius: 16px;
+    box-shadow:
+        0 8px 32px rgba(212, 168, 75, 0.3),
+        0 0 0 1px rgba(212, 168, 75, 0.2),
+        inset 0 1px 0 rgba(255, 255, 255, 0.9);
+}
+
+/* 响应式调整 */
+@media (max-width: 768px) {
+    .combo-message-overlay .feedback-msg.combo {
+        font-size: 2rem;
+        padding: 0.4rem 1.2rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .combo-message-overlay .feedback-msg.combo {
+        font-size: 1.5rem;
+        padding: 0.3rem 1rem;
+    }
+}

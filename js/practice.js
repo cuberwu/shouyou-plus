@@ -34,6 +34,9 @@ class PracticeApp {
         // 反馈消息定时器
         this.feedbackTimer = null;
         
+        // 连击消息定时器（独立于反馈定时器）
+        this.comboMessageTimer = null;
+        
         // 初始化
         this.init();
     }
@@ -614,7 +617,6 @@ class PracticeApp {
      * 显示连击消息
      */
     showComboMessage(combo) {
-        const { feedbackMessage } = this.elements;
         const messages = [
             '不错！',
             '很好！',
@@ -623,7 +625,39 @@ class PracticeApp {
             '无敌！'
         ];
         const msgIndex = Math.min(Math.floor(combo / 5) - 1, messages.length - 1);
-        feedbackMessage.innerHTML = `<span class="feedback-msg combo">🔥 ${combo} 连击！${messages[msgIndex]}</span>`;
+        
+        // 清除之前的连击消息定时器
+        if (this.comboMessageTimer) {
+            clearTimeout(this.comboMessageTimer);
+            this.comboMessageTimer = null;
+        }
+        
+        // 移除之前的连击消息元素
+        const oldComboMsg = document.querySelector('.combo-message-overlay');
+        if (oldComboMsg) {
+            oldComboMsg.remove();
+        }
+        
+        // 创建独立的连击消息元素（不受 clearFeedback 影响）
+        const comboMsgEl = document.createElement('div');
+        comboMsgEl.className = 'combo-message-overlay';
+        comboMsgEl.innerHTML = `<span class="feedback-msg combo">🔥 ${combo} 连击！${messages[msgIndex]}</span>`;
+        document.body.appendChild(comboMsgEl);
+        
+        // 触发动画
+        requestAnimationFrame(() => {
+            comboMsgEl.classList.add('show');
+        });
+        
+        // 设置显示时间（1.5秒后淡出）
+        this.comboMessageTimer = setTimeout(() => {
+            comboMsgEl.classList.remove('show');
+            comboMsgEl.classList.add('fade-out');
+            // 动画结束后移除元素
+            setTimeout(() => {
+                comboMsgEl.remove();
+            }, 300);
+        }, 1500);
         
         // 连击动画
         this.elements.combo.parentElement.classList.add('combo-achieved');
