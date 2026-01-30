@@ -1,6 +1,15 @@
 /* 首右plus 字根练习 - 水墨风格自定义样式 */
 
 /* ========================================
+   全局样式 - 防止水平滚动
+   ======================================== */
+
+html,
+body {
+    overflow-x: hidden;
+}
+
+/* ========================================
    字体加载优化 - 避免 FOUT (Flash of Unstyled Text)
    ======================================== */
 
@@ -414,18 +423,33 @@ kbd:hover {
         "stats"
         "practice"
         "chart";
+    /* 防止子元素撑大 grid */
+    overflow: hidden;
+    max-width: 100%;
 }
 
 .stats-panel {
     grid-area: stats;
+    /* 防止 grid 子元素撑大容器 */
+    min-width: 0;
+    max-width: 100%;
+    overflow: hidden;
 }
 
 .practice-panel {
     grid-area: practice;
+    /* 防止 grid 子元素撑大容器 */
+    min-width: 0;
+    max-width: 100%;
+    overflow: hidden;
 }
 
 .chart-panel {
     grid-area: chart;
+    /* 防止 grid 子元素撑大容器 */
+    min-width: 0;
+    max-width: 100%;
+    overflow: hidden;
 }
 
 /* 字根图隐藏时的布局 */
